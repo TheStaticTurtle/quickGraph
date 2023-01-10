@@ -1,6 +1,6 @@
 # quickGraph
 
-quickGraph is a dead simple API for the `opengraph_parse` module.
+quickGraph is a dead simple API to get the opengraph meta tags of a website
 
 ## API
 

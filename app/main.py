@@ -1,7 +1,8 @@
 from urllib.parse import urlparse
 
+import requests
+from bs4 import BeautifulSoup
 from fastapi import FastAPI
-from opengraph_parse import parse_page
 import re
 
 from starlette import status
@@ -19,6 +20,23 @@ regex_url = re.compile(
 
 def is_ip(ip):
     return ip.count('.') == 3 and  all(0<=int(num)<256 for num in ip.rstrip().split('.'))
+
+def parse_page(page_url):
+    response = requests.get(page_url, headers={
+        "User-Agent": "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"
+    })
+
+    if response.status_code != 200:
+        return None
+
+    soup = BeautifulSoup(response.content, 'html.parser')
+
+    found_tags = {}
+    for meta_tag in soup.find_all("meta"):
+        if meta_tag.has_attr("property") and meta_tag.has_attr("content") and (meta_tag["property"].startswith("og:") or meta_tag["property"].startswith("twitter:")):
+            found_tags[meta_tag["property"]] = meta_tag["content"]
+    return found_tags
+
 
 @app.get("/parse")
 async def root(url: str, response: Response):
